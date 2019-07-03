@@ -8,9 +8,13 @@ import androidx.fragment.app.FragmentManager;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.renderscript.Sampler;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.naver.maps.geometry.LatLng;
+import com.naver.maps.geometry.LatLngBounds;
 import com.naver.maps.map.CameraAnimation;
 import com.naver.maps.map.CameraUpdate;
 import com.naver.maps.map.MapFragment;
@@ -23,10 +27,13 @@ import com.naver.maps.map.overlay.OverlayImage;
 import com.naver.maps.map.overlay.PolygonOverlay;
 import com.naver.maps.map.overlay.PolylineOverlay;
 
+import java.security.KeyStore;
 import java.util.Arrays;
+
 
 public  class MainActivity extends FragmentActivity
     implements OnMapReadyCallback {
+    boolean setValue = true;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,24 +51,29 @@ public  class MainActivity extends FragmentActivity
     @UiThread
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
-        CameraUpdate cameraUpdate = CameraUpdate.scrollTo(new LatLng(35.932277, 126.876428));
-        cameraUpdate.zoomTo(8);
+
+        double [][] Location  = { { 35.945357, 126.682163 },{ 35.846715, 127.129386 }, { 35.967587, 126.736843 }, { 35.969449, 126.957322 } };
+
+        LatLngBounds latLngBounds = new LatLngBounds(new LatLng(Location[0][0], Location[0][1]-0.01),
+                                                     new LatLng(Location[1][0], Location[1][1]+0.01));
+
+        CameraUpdate cameraUpdate = CameraUpdate.fitBounds(latLngBounds);
         naverMap.moveCamera(cameraUpdate);
 
         Marker GunsanUniv = new Marker();
-        GunsanUniv.setPosition(new LatLng(35.945357, 126.682163));
+        GunsanUniv.setPosition(new LatLng(Location[0][0], Location[0][1]));
         GunsanUniv.setMap(naverMap);
 
         Marker JeonbukUniv = new Marker();
-        JeonbukUniv.setPosition(new LatLng(35.846715, 127.129386));
+        JeonbukUniv.setPosition(new LatLng(Location[1][0], Location[1][1]));
         JeonbukUniv.setMap(naverMap);
 
         Marker GunsanCityHall = new Marker();
-        GunsanCityHall.setPosition(new LatLng(35.967587, 126.736843));
+        GunsanCityHall.setPosition(new LatLng(Location[2][0], Location[2][1]));
         GunsanCityHall.setMap(naverMap);
 
         Marker WonGwangUniv = new Marker();
-        WonGwangUniv.setPosition(new LatLng(35.969449, 126.957322));
+        WonGwangUniv.setPosition(new LatLng(Location[3][0], Location[3][1]));
         WonGwangUniv.setMap(naverMap);
 
         InfoWindow infoWindow = new InfoWindow();
@@ -103,13 +115,44 @@ public  class MainActivity extends FragmentActivity
 
         PolylineOverlay polyline = new PolylineOverlay();
         polyline.setCoords(Arrays.asList(
-                new LatLng(35.945357, 126.682163),
-                new LatLng(35.967587, 126.736843),
-                new LatLng(35.969449, 126.957322),
-                new LatLng(35.846715, 127.129386)
+                new LatLng(Location[0][0], Location[0][1]),
+                new LatLng(Location[1][0], Location[1][1]),
+                new LatLng(Location[2][0], Location[2][1]),
+                new LatLng(Location[3][0], Location[3][1])
         ));
+
         polyline.setMap(naverMap);
         polyline.setWidth(10);
+
+
+        Button btn = (Button)findViewById(R.id.btn);
+        btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if (setValue == true) {
+                    GunsanUniv.setMap(naverMap);
+                    JeonbukUniv.setMap(naverMap);
+                    GunsanCityHall.setMap(naverMap);
+                    WonGwangUniv.setMap(naverMap);
+                    polyline.setMap(naverMap);
+
+                    setValue = false;
+                }
+                else if (setValue == false) {
+                    GunsanUniv.setMap(null);
+                    JeonbukUniv.setMap(null);
+                    GunsanCityHall.setMap(null);
+                    WonGwangUniv.setMap(null);
+                    polyline.setMap(null);
+
+                    setValue = true;
+                }
+            }
+        });
+
+
     }
+
+
 }
 
