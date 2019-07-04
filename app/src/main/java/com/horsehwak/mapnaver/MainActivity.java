@@ -28,12 +28,15 @@ import com.naver.maps.map.overlay.PolygonOverlay;
 import com.naver.maps.map.overlay.PolylineOverlay;
 
 import java.security.KeyStore;
+import java.util.ArrayList;
 import java.util.Arrays;
+
+import static android.media.CamcorderProfile.get;
 
 
 public  class MainActivity extends FragmentActivity
     implements OnMapReadyCallback {
-    boolean setValue = true;
+    boolean setValue = false;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,56 +54,50 @@ public  class MainActivity extends FragmentActivity
     @UiThread
     @Override
     public void onMapReady(@NonNull NaverMap naverMap) {
+        //각 장소별 경위도
+        ArrayList<LatLng> Location  = new ArrayList<LatLng>();
+        ArrayList<Marker> PlaceName = new ArrayList<Marker>();
+        ArrayList<String> MarkerTag = new ArrayList<String>();
 
-        double [][] Location  = { { 35.945357, 126.682163 },{ 35.846715, 127.129386 }, { 35.967587, 126.736843 }, { 35.969449, 126.957322 } };
 
-        LatLngBounds latLngBounds = new LatLngBounds(new LatLng(Location[0][0], Location[0][1]-0.01),
-                                                     new LatLng(Location[1][0], Location[1][1]+0.01));
+        Location.add(new LatLng(35.945357, 126.682163));
+        Location.add(new LatLng(35.846715, 127.129386));
+        Location.add(new LatLng(35.967587, 126.736843));
+        Location.add(new LatLng(35.969449, 126.957322));
 
+        MarkerTag.add("군산대학교");
+        MarkerTag.add("전북대학교");
+        MarkerTag.add("군산시청");
+        MarkerTag.add("원광대학교");
+
+        LatLngBounds latLngBounds = new LatLngBounds(Location.get(0), Location.get(1));
+
+        //중간값 화면 잡기
         CameraUpdate cameraUpdate = CameraUpdate.fitBounds(latLngBounds);
         naverMap.moveCamera(cameraUpdate);
 
-        Marker GunsanUniv = new Marker();
-        GunsanUniv.setPosition(new LatLng(Location[0][0], Location[0][1]));
-        GunsanUniv.setMap(naverMap);
+        //마커 찍기
+        for(int i = 0; i < Location.size(); i++){
+            Marker marker = new Marker();
+            marker.setPosition(Location.get(i));
+            PlaceName.add(marker);
+        }
+        for (Marker marker : PlaceName){
+            marker.setMap(naverMap);
+        }
 
-        Marker JeonbukUniv = new Marker();
-        JeonbukUniv.setPosition(new LatLng(Location[1][0], Location[1][1]));
-        JeonbukUniv.setMap(naverMap);
-
-        Marker GunsanCityHall = new Marker();
-        GunsanCityHall.setPosition(new LatLng(Location[2][0], Location[2][1]));
-        GunsanCityHall.setMap(naverMap);
-
-        Marker WonGwangUniv = new Marker();
-        WonGwangUniv.setPosition(new LatLng(Location[3][0], Location[3][1]));
-        WonGwangUniv.setMap(naverMap);
-
+        //정보창 객체 생성
         InfoWindow infoWindow = new InfoWindow();
 
-        GunsanUniv.setTag("군산대학교");
-        GunsanUniv.setOnClickListener(overlay -> {
-            infoWindow.open(GunsanUniv);
-            return  true;
-        });
-
-        JeonbukUniv.setTag("전북대학교");
-        JeonbukUniv.setOnClickListener(overlay -> {
-            infoWindow.open(JeonbukUniv);
-            return true;
-        });
-
-        GunsanCityHall.setTag("군산시청");
-        GunsanCityHall.setOnClickListener(overlay -> {
-            infoWindow.open(GunsanCityHall);
-            return true;
-        });
-
-        WonGwangUniv.setTag("원광대학교");
-        WonGwangUniv.setOnClickListener(overlay -> {
-            infoWindow.open(WonGwangUniv);
-            return true;
-        });
+        //마커와 정보창 연결
+        for (int i = 0; i < Location.size(); i++){
+            PlaceName.get(i).setTag(MarkerTag.get(i));
+            int finalI = i;
+            PlaceName.get(i).setOnClickListener(overlay -> {
+                infoWindow.open(PlaceName.get(finalI));
+                return true;
+            });
+        }
 
         infoWindow.setAdapter(new InfoWindow.DefaultTextAdapter(getApplicationContext()) {
             @NonNull
@@ -109,50 +106,49 @@ public  class MainActivity extends FragmentActivity
                 return (CharSequence)infoWindow.getMarker().getTag();
              }
         });
+
+        // 네이버맵 클릭 시  정보창 닫음
         naverMap.setOnMapClickListener((coord, point) -> {
             infoWindow.close();
         });
 
+        // 경로표시
         PolylineOverlay polyline = new PolylineOverlay();
         polyline.setCoords(Arrays.asList(
-                new LatLng(Location[0][0], Location[0][1]),
-                new LatLng(Location[1][0], Location[1][1]),
-                new LatLng(Location[2][0], Location[2][1]),
-                new LatLng(Location[3][0], Location[3][1])
+               Location.get(0),Location.get(1),Location.get(2),Location.get(3)
         ));
 
         polyline.setMap(naverMap);
         polyline.setWidth(10);
 
-
+        // 버튼클릭으로 정보창 및 경로 ON/OFF
         Button btn = (Button)findViewById(R.id.btn);
         btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 if (setValue == true) {
-                    GunsanUniv.setMap(naverMap);
-                    JeonbukUniv.setMap(naverMap);
-                    GunsanCityHall.setMap(naverMap);
-                    WonGwangUniv.setMap(naverMap);
+                    for(int i = 0 ; i < Location.size(); i++){
+                        PlaceName.get(i).setMap(naverMap);
+                    }
                     polyline.setMap(naverMap);
 
                     setValue = false;
                 }
                 else if (setValue == false) {
-                    GunsanUniv.setMap(null);
-                    JeonbukUniv.setMap(null);
-                    GunsanCityHall.setMap(null);
-                    WonGwangUniv.setMap(null);
+                    for(int i = 0 ; i < Location.size(); i++){
+                        PlaceName.get(i).setMap(null);
+                    }
                     polyline.setMap(null);
 
                     setValue = true;
                 }
             }
+
         });
-
-
+        //클릭시 경위도표시
+        naverMap.setOnMapLongClickListener((point, coord) -> {
+            Toast.makeText(getApplicationContext(), "위도: " + coord.latitude + ", 경도: " + coord.longitude, Toast.LENGTH_SHORT).show();
+        });
     }
-
-
 }
 
